@@ -1,0 +1,991 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>FretFlow // Guitar Practice & Milestone Engine</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          colors: {
+            brand: {
+              50: '#f0fdf4',
+              500: '#22c55e',
+              600: '#16a34a',
+              700: '#15803d',
+              900: '#14532d',
+            }
+          }
+        }
+      }
+    }
+  </script>
+  <style>
+    input[type=range]::-webkit-slider-thumb {
+      appearance: none;
+      height: 18px;
+      width: 18px;
+      border-radius: 9999px;
+      background: #22c55e;
+      cursor: pointer;
+    }
+  </style>
+</head>
+<body class="bg-slate-950 text-slate-100 min-h-screen flex flex-col font-sans antialiased selection:bg-brand-500 selection:text-black">
+
+  <!-- Header -->
+  <header class="border-b border-slate-800 bg-slate-900/60 backdrop-blur sticky top-0 z-50">
+    <div class="max-w-7xl mx-auto px-4 py-3 flex items-center justify-between">
+      <div class="flex items-center space-x-3">
+        <div class="w-8 h-8 rounded-lg bg-brand-500 text-black flex items-center justify-center font-black text-lg">
+          🎸
+        </div>
+        <div>
+          <h1 class="text-base font-bold tracking-tight text-white leading-none">FretFlow</h1>
+          <p class="text-xs text-slate-400 mt-0.5">Fundamentals to Math Rock Architecture</p>
+        </div>
+      </div>
+      <div class="flex items-center space-x-2">
+        <button id="exportBtn" class="px-2.5 py-1 text-xs font-semibold bg-slate-800 hover:bg-slate-700 text-slate-300 rounded border border-slate-700 transition">
+          Export JSON
+        </button>
+        <button id="importBtn" class="px-2.5 py-1 text-xs font-semibold bg-slate-800 hover:bg-slate-700 text-slate-300 rounded border border-slate-700 transition">
+          Import
+        </button>
+        <input type="file" id="importInput" class="hidden" accept=".json" />
+      </div>
+    </div>
+  </header>
+
+  <!-- Main Content Layout -->
+  <main class="max-w-7xl mx-auto px-4 py-6 flex-1 w-full grid grid-cols-1 lg:grid-cols-12 gap-6">
+
+    <!-- Left Column: Curriculum Browser & Active Lesson -->
+    <div class="lg:col-span-7 space-y-6">
+
+      <!-- Navigation & Stage Selector -->
+      <div class="bg-slate-900/80 border border-slate-800 rounded-xl p-4 flex flex-col sm:flex-row gap-3 items-start sm:items-center justify-between">
+        <div class="w-full sm:w-auto">
+          <label class="block text-xs uppercase tracking-wider text-slate-400 font-semibold mb-1">Select Stage / Month</label>
+          <select id="stageSelector" class="w-full bg-slate-950 border border-slate-700 rounded-lg px-3 py-1.5 text-sm font-medium text-slate-200 focus:outline-none focus:border-brand-500">
+            <!-- Injected by JS -->
+          </select>
+        </div>
+        <div class="flex items-center gap-2 w-full sm:w-auto justify-end">
+          <button id="prevLessonBtn" class="p-2 bg-slate-800 hover:bg-slate-700 text-slate-200 rounded-lg border border-slate-700 text-sm font-semibold transition">
+            ← Prev
+          </button>
+          <button id="nextLessonBtn" class="p-2 bg-slate-800 hover:bg-slate-700 text-slate-200 rounded-lg border border-slate-700 text-sm font-semibold transition">
+            Next →
+          </button>
+        </div>
+      </div>
+
+      <!-- Current Lesson Detailed View -->
+      <div id="lessonCard" class="bg-slate-900 border border-slate-800 rounded-xl overflow-hidden shadow-xl">
+        <div class="p-6 border-b border-slate-800 bg-gradient-to-r from-slate-900 via-slate-900 to-slate-800/40">
+          <div class="flex items-center justify-between flex-wrap gap-2 mb-2">
+            <span id="lessonMetaBadge" class="text-xs px-2.5 py-0.5 rounded-full font-mono font-semibold bg-brand-500/10 text-brand-500 border border-brand-500/30">
+              Month 1 // Week 1 // Day 1
+            </span>
+            <span id="lessonGearBadge" class="text-xs text-slate-400 font-medium flex items-center gap-1">
+              <span>⚙️ Gear:</span> <strong class="text-slate-200 font-semibold" id="lessonGearText">Acoustic-Electric</strong>
+            </span>
+          </div>
+          <h2 id="lessonTitle" class="text-xl sm:text-2xl font-black text-white tracking-tight">Em to G Transition & Steady Meter</h2>
+          <p id="lessonSubtext" class="text-sm text-slate-400 mt-1">Focus: Nirvana – "About a Girl"</p>
+        </div>
+
+        <div class="p-6 space-y-6">
+          <!-- Drill Matrix -->
+          <div>
+            <h3 class="text-xs uppercase tracking-wider text-slate-400 font-semibold mb-3">Structured Lesson Drills</h3>
+            <div id="drillList" class="space-y-3">
+              <!-- Injected by JS -->
+            </div>
+          </div>
+
+          <!-- Application Song & UG Search Link -->
+          <div class="bg-slate-950/70 border border-slate-800 rounded-lg p-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+            <div>
+              <div class="text-xs font-semibold text-brand-500 uppercase tracking-wider">Curated Song Study</div>
+              <div id="songTitle" class="text-base font-bold text-white mt-0.5">Nirvana – "About a Girl"</div>
+              <div id="songNotes" class="text-xs text-slate-400 mt-1">Focus on strictly Em and G changes; maintain steady down-up 8th notes without pausing.</div>
+            </div>
+            <a id="ugLink" href="#" target="_blank" rel="noopener noreferrer" class="inline-flex items-center gap-1.5 px-3 py-2 bg-yellow-500/10 hover:bg-yellow-500/20 text-yellow-400 border border-yellow-500/30 text-xs font-bold rounded-lg transition shrink-0">
+              <span>Ultimate Guitar Tab</span>
+              <span>↗</span>
+            </a>
+          </div>
+
+          <!-- Milestone Requirement & Pass/Fail Action -->
+          <div class="border-t border-slate-800 pt-5 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+            <div class="space-y-1">
+              <span class="text-xs uppercase tracking-wider text-slate-400 font-semibold">Stage Gate Milestone</span>
+              <p id="milestoneDescription" class="text-xs font-mono text-slate-300">Target: 40 switches in 60s & 8 measures continuous at 75 BPM.</p>
+            </div>
+            <button id="togglePassBtn" class="w-full sm:w-auto px-4 py-2.5 rounded-lg text-xs font-bold transition flex items-center justify-center gap-2 border">
+              <!-- Injected by JS -->
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Quick Curriculum Roadmap Accordion -->
+      <div class="bg-slate-900/60 border border-slate-800 rounded-xl p-4">
+        <h3 class="text-xs uppercase tracking-wider text-slate-400 font-semibold mb-3">Roadmap Navigation Index</h3>
+        <div id="lessonIndexGrid" class="grid grid-cols-3 sm:grid-cols-6 gap-2">
+          <!-- Injected by JS -->
+        </div>
+      </div>
+    </div>
+
+    <!-- Right Column: Interactive Practice Utilities -->
+    <div class="lg:col-span-5 space-y-6">
+
+      <!-- Interactive Web Audio Metronome -->
+      <div class="bg-slate-900 border border-slate-800 rounded-xl p-5 shadow-lg">
+        <div class="flex items-center justify-between mb-4">
+          <h3 class="text-sm font-bold uppercase tracking-wider text-slate-300 flex items-center gap-2">
+            <span>⏱️</span> Audio Metronome
+          </h3>
+          <div id="beatIndicator" class="w-3 h-3 rounded-full bg-slate-700 transition duration-75"></div>
+        </div>
+
+        <div class="text-center py-2">
+          <div class="flex items-center justify-center gap-3">
+            <button id="bpmMinus" class="w-8 h-8 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 font-bold border border-slate-700">-</button>
+            <span id="bpmDisplay" class="text-4xl font-mono font-black text-white w-24">75</span>
+            <button id="bpmPlus" class="w-8 h-8 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 font-bold border border-slate-700">+</button>
+          </div>
+          <span class="text-xs text-slate-400 font-mono tracking-widest uppercase">BPM</span>
+        </div>
+
+        <div class="mt-4">
+          <input type="range" id="bpmSlider" min="40" max="220" value="75" class="w-full h-1.5 bg-slate-800 rounded-lg appearance-none cursor-pointer">
+        </div>
+
+        <div class="grid grid-cols-2 gap-3 mt-5">
+          <button id="metronomeToggle" class="w-full py-2.5 bg-brand-600 hover:bg-brand-500 text-black font-bold text-xs uppercase tracking-wider rounded-lg transition shadow-md">
+            Start Metronome
+          </button>
+          <button id="tapTempoBtn" class="w-full py-2.5 bg-slate-800 hover:bg-slate-700 text-slate-200 font-bold text-xs uppercase tracking-wider rounded-lg border border-slate-700 transition">
+            Tap Tempo
+          </button>
+        </div>
+      </div>
+
+      <!-- 60-Second Switch Benchmark Engine -->
+      <div class="bg-slate-900 border border-slate-800 rounded-xl p-5 shadow-lg">
+        <div class="flex items-center justify-between mb-3">
+          <h3 class="text-sm font-bold uppercase tracking-wider text-slate-300 flex items-center gap-2">
+            <span>⚡</span> 60-Sec Switch Tapper
+          </h3>
+          <span id="switchTimer" class="font-mono text-sm text-brand-500 font-bold">60s</span>
+        </div>
+        <p class="text-xs text-slate-400 mb-4">Count clean chord shifts without looking at your fretting hand. Hit spacebar or tap the button on every shift.</p>
+
+        <div class="flex flex-col items-center justify-center py-4 bg-slate-950/60 rounded-xl border border-slate-800 mb-4">
+          <div id="switchCountDisplay" class="text-5xl font-mono font-black text-white">0</div>
+          <div class="text-xs font-mono text-slate-500 mt-1 uppercase tracking-wider">Clean Shifts Logged</div>
+        </div>
+
+        <div class="grid grid-cols-2 gap-3">
+          <button id="startSwitchBtn" class="py-2.5 bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-xs uppercase tracking-wider rounded-lg transition">
+            Start Test
+          </button>
+          <button id="tapSwitchBtn" disabled class="py-2.5 bg-slate-800 disabled:opacity-40 text-slate-200 font-bold text-xs uppercase tracking-wider rounded-lg border border-slate-700 transition">
+            Tap (+1)
+          </button>
+        </div>
+      </div>
+
+      <!-- Session Practice Timer & Logger -->
+      <div class="bg-slate-900 border border-slate-800 rounded-xl p-5 shadow-lg">
+        <div class="flex items-center justify-between mb-3">
+          <h3 class="text-sm font-bold uppercase tracking-wider text-slate-300 flex items-center gap-2">
+            <span>⏱️</span> 45-Min Routine Clock
+          </h3>
+          <span id="sessionTimeDisplay" class="font-mono text-sm font-bold text-amber-400">45:00</span>
+        </div>
+        <div class="flex gap-2 mb-4">
+          <div class="flex-1 text-center py-1 bg-slate-950 rounded border border-slate-800 text-[10px] text-slate-400">
+            Warmup (15m)
+          </div>
+          <div class="flex-1 text-center py-1 bg-slate-950 rounded border border-slate-800 text-[10px] text-slate-400">
+            Drills (15m)
+          </div>
+          <div class="flex-1 text-center py-1 bg-slate-950 rounded border border-slate-800 text-[10px] text-slate-400">
+            Repertoire (15m)
+          </div>
+        </div>
+        <div class="grid grid-cols-2 gap-3">
+          <button id="sessionToggle" class="py-2 bg-slate-800 hover:bg-slate-700 text-slate-200 font-bold text-xs rounded-lg border border-slate-700 transition">
+            Start Routine
+          </button>
+          <button id="sessionReset" class="py-2 bg-slate-800 hover:bg-slate-700 text-slate-400 hover:text-white font-bold text-xs rounded-lg border border-slate-700 transition">
+            Reset (45m)
+          </button>
+        </div>
+      </div>
+
+    </div>
+  </main>
+
+  <!-- Script Architecture -->
+  <script>
+    // -------------------------------------------------------------
+    // 1. Comprehensive Curriculum Schema
+    // -------------------------------------------------------------
+    const CURRICULUM_DATA = [
+      // MONTH 1: Open Chords, Steady Folk/Rock Rhythms
+      {
+        id: "m1_w1_d1",
+        stage: "Month 1: Open Chords & Strumming",
+        week: 1,
+        day: 1,
+        title: "Em to G Pivot & Down-Up Meter",
+        gear: "Acoustic-Electric",
+        drills: [
+          { name: "60-sec Em/G Switch Benchmark", desc: "Keep pivot anchor finger stable; aim for clean fret contact.", target: "40 switches in 60s" },
+          { name: "Down-Up Strumming Grid", desc: "Metronome at 75 BPM. Strict 8th-note strumming over Em.", target: "5 continuous minutes" }
+        ],
+        song: {
+          title: "Nirvana - 'About a Girl'",
+          notes: "Verse strictly cycles Em and G. Focus on steady right-hand wrist rotation.",
+          query: "Nirvana About a Girl chords"
+        },
+        milestone: "Execute 40 clean switches in 60s and play 8 bars locked at 75 BPM."
+      },
+      {
+        id: "m1_w1_d2",
+        stage: "Month 1: Open Chords & Strumming",
+        week: 1,
+        day: 2,
+        title: "Fret-Hand Muting & Chorus Shifts",
+        gear: "Acoustic-Electric",
+        drills: [
+          { name: "Percussive Fret-Hand Mute", desc: "Strum beat 1, release fret tension on beat 2 to deaden strings without lifting fingers.", target: "20 clean cycles" },
+          { name: "C and D Open Voicings", desc: "Transition from open G to open C and D without hesitating.", target: "30 changes / min" }
+        ],
+        song: {
+          title: "Nirvana - 'About a Girl' (Pre-Chorus)",
+          notes: "Focus on clean transition into C#m and C/D chords.",
+          query: "Nirvana About a Girl chords"
+        },
+        milestone: "Switch between G, C, and D without pausing the strumming hand."
+      },
+      {
+        id: "m1_w1_d3",
+        stage: "Month 1: Open Chords & Strumming",
+        week: 1,
+        day: 3,
+        title: "Full Song Integration: 'About a Girl'",
+        gear: "Acoustic-Electric",
+        drills: [
+          { name: "Metronome Ramp (Em to G)", desc: "Ramp metronome from 75 to 90 BPM in 5 BPM increments.", target: "90 BPM sustained" },
+          { name: "Full Repertoire Run", desc: "Play verse and chorus with original track or UG backing track.", target: "Zero rhythm stalls" }
+        ],
+        song: {
+          title: "Nirvana - 'About a Girl' (Full Playthrough)",
+          notes: "Maintain exact arm tempo through the chorus shifts.",
+          query: "Nirvana About a Girl chords"
+        },
+        milestone: "Complete full playthrough of verse and chorus at 100% speed."
+      },
+
+      // MONTH 1: Week 2
+      {
+        id: "m1_w2_d1",
+        stage: "Month 1: Open Chords & Strumming",
+        week: 2,
+        day: 1,
+        title: "Folk Boom-Chick & G to C Shift",
+        gear: "Acoustic-Electric",
+        drills: [
+          { name: "Root-Strum Isolation", desc: "Strike low bass root note on beat 1, strum treble strings on beat 2.", target: "Metronome at 75 BPM" },
+          { name: "Ring-Finger Hover Control", desc: "Keep ring finger hovering close to the fretboard when shifting G to C.", target: "35 switches / min" }
+        ],
+        song: {
+          title: "The White Stripes - 'Hotel Yorba'",
+          notes: "Classic G to C to D progression with a bouncy country-folk meter.",
+          query: "The White Stripes Hotel Yorba chords"
+        },
+        milestone: "Maintain alternating bass strum on G and C for 2 minutes."
+      },
+      {
+        id: "m1_w2_d2",
+        stage: "Month 1: Open Chords & Strumming",
+        week: 2,
+        day: 2,
+        title: "Open D Voicing & Alternating Bass",
+        gear: "Acoustic-Electric",
+        drills: [
+          { name: "Clean D High E String Ring", desc: "Ensure ring finger pad does not touch or choke the open high E string.", target: "10/10 clean strums" },
+          { name: "Alternating D Bass (D to A string)", desc: "Strike open 4th string, strum, strike open 5th string, strum.", target: "80 BPM" }
+        ],
+        song: {
+          title: "The White Stripes - 'Hotel Yorba' (Verse Loop)",
+          notes: "Connect the G -> C -> D chord cycle at moderate speed.",
+          query: "The White Stripes Hotel Yorba chords"
+        },
+        milestone: "Zero dead notes on the high E string over 10 consecutive D chord strums."
+      },
+      {
+        id: "m1_w2_d3",
+        stage: "Month 1: Open Chords & Strumming",
+        week: 2,
+        day: 3,
+        title: "High-Tempo Folk Drive",
+        gear: "Acoustic-Electric",
+        drills: [
+          { name: "Wrist Relaxation Check", desc: "Strum rapidly without tensing the forearm muscles.", target: "2 minutes straight" },
+          { name: "Full Playthrough at 95 BPM", desc: "Execute full G-C-D cycles along with metronome.", target: "95 BPM locked" }
+        ],
+        song: {
+          title: "The White Stripes - 'Hotel Yorba' (Full Speed)",
+          notes: "Keep the bounce snappy and rhythmic.",
+          query: "The White Stripes Hotel Yorba chords"
+        },
+        milestone: "Play 8 consecutive measures of 'Hotel Yorba' at 95 BPM with zero tempo drag."
+      },
+
+      // MONTH 1: Week 3
+      {
+        id: "m1_w3_d1",
+        stage: "Month 1: Open Chords & Strumming",
+        week: 3,
+        day: 1,
+        title: "Capo Voicings & Fret-Hand Hammer-Ons",
+        gear: "Acoustic-Electric (Capo 3)",
+        drills: [
+          { name: "Am D-String Hammer-On", desc: "Pluck open D string and hammer middle finger onto 2nd fret firmly.", target: "25 crisp snaps" },
+          { name: "Capo Intonation Verification", desc: "Check tuning after clamping capo to 3rd fret to ensure zero pitch drift.", target: "Tuner verified" }
+        ],
+        song: {
+          title: "Colter Wall - 'Kate McCannon'",
+          notes: "Dark, deliberate Americana tempo. Notice the heavy bass note impact.",
+          query: "Colter Wall Kate McCannon chords"
+        },
+        milestone: "Execute audible, percussive hammer-ons on the Am shape."
+      },
+      {
+        id: "m1_w3_d2",
+        stage: "Month 1: Open Chords & Strumming",
+        week: 3,
+        day: 2,
+        title: "Thumb Independence & Fmaj7",
+        gear: "Acoustic-Electric (Capo 3)",
+        drills: [
+          { name: "Fmaj7 Clean Ring", desc: "Fret x-x-3-2-1-0. Make sure the open high E rings out completely.", target: "100% clarity" },
+          { name: "Thumb Root Drop", desc: "Pick root notes with thumb only, then pluck G and B strings with fingers.", target: "56 BPM" }
+        ],
+        song: {
+          title: "Colter Wall - 'Kate McCannon' (Verse Cadence)",
+          notes: "Slow, measured cadence. Focus on clear note sustain.",
+          query: "Colter Wall Kate McCannon chords"
+        },
+        milestone: "Smoothly transition into Fmaj7 without deadening the high E."
+      },
+      {
+        id: "m1_w3_d3",
+        stage: "Month 1: Open Chords & Strumming",
+        week: 3,
+        day: 3,
+        title: "Americana Ballad Integration",
+        gear: "Acoustic-Electric (Capo 3)",
+        drills: [
+          { name: "Full Dynamic Playthrough", desc: "Maintain steady downbeat pacing without rushing.", target: "Complete song track" },
+          { name: "Audio Audit Recording", desc: "Record a 30-sec voice memo; check for fret buzz or rushed transitions.", target: "Audio logged" }
+        ],
+        song: {
+          title: "Colter Wall - 'Kate McCannon' (Full Performance)",
+          notes: "Match Colter Wall's driving, steady thumb pulse.",
+          query: "Colter Wall Kate McCannon chords"
+        },
+        milestone: "Perform complete 4-chord verse progression with hammer-ons at 56 BPM."
+      },
+
+      // MONTH 1: Week 4
+      {
+        id: "m1_w4_d1",
+        stage: "Month 1: Open Chords & Strumming",
+        week: 4,
+        day: 1,
+        title: "The Open A Chord & Rhythmic Accents",
+        gear: "Acoustic-Electric",
+        drills: [
+          { name: "A Major Cluster Finger Placement", desc: "Fit fingers 1, 2, and 3 inside fret 2 without muffling open high E.", target: "15 clean frettings" },
+          { name: "D -> A -> G Rapid Loop", desc: "Switching between all three chords cleanly.", target: "30 changes / min" }
+        ],
+        song: {
+          title: "Creedence Clearwater Revival - 'Bad Moon Rising'",
+          notes: "Crisp folk-rock rhythm. Crisp downstrokes with immediate damping.",
+          query: "Creedence Clearwater Revival Bad Moon Rising chords"
+        },
+        milestone: "Voice the open A chord with all 5 strings ringing true."
+      },
+      {
+        id: "m1_w4_d2",
+        stage: "Month 1: Open Chords & Strumming",
+        week: 4,
+        day: 2,
+        title: "The Palm-Heel Stop (Chop Strum)",
+        gear: "Acoustic-Electric",
+        drills: [
+          { name: "Pick Hand Slap-Mute", desc: "Hit the strum on beat 2, immediately kill vibrations with picking hand palm.", target: "40 reps" },
+          { name: "85 BPM Locked Meter", desc: "Play D - A - G pattern with backbeat slaps.", target: "85 BPM" }
+        ],
+        song: {
+          title: "CCR - 'Bad Moon Rising' (Verse & Chorus)",
+          notes: "Lock your strumming stops tightly to the metronome click.",
+          query: "Creedence Clearwater Revival Bad Moon Rising chords"
+        },
+        milestone: "Execute crisp rhythmic stops on beats 2 and 4 cleanly."
+      },
+      {
+        id: "m1_w4_d3",
+        stage: "Month 1: Open Chords & Strumming",
+        week: 4,
+        day: 3,
+        title: "Month 1 Milestone Assessment",
+        gear: "Acoustic-Electric",
+        drills: [
+          { name: "4-Song Marathon Review", desc: "Play 2 minutes of 'About a Girl', 'Hotel Yorba', 'Kate McCannon', and 'Bad Moon Rising'.", target: "Zero stops" },
+          { name: "Final 60-Sec Switch Test", desc: "Test Em to G and G to C switch speed.", target: "$\ge$ 45 switches" }
+        ],
+        song: {
+          title: "Month 1 Repertoire Audit",
+          notes: "Evaluate timing accuracy, string clarity, and fluid transitions.",
+          query: "Nirvana About a Girl chords"
+        },
+        milestone: "Complete all 4 Month 1 milestone tracks back-to-back without halting rhythm."
+      },
+
+      // MONTH 2: Power Chords, Lead Articulation & Electric Amp
+      {
+        id: "m2_w5_d1",
+        stage: "Month 2: Power Chords & Electric Articulation",
+        week: 5,
+        day: 1,
+        title: "Root-6 Power Chords & Bridge Muting",
+        gear: "Electric + Marshall Amp (Clean Breakup)",
+        drills: [
+          { name: "Root-6 2-Finger Power Chords", desc: "Shape G5 (3-5-x-x-x-x) and Bb5 (6-8-x-x-x-x). Mute lower strings with index pad.", target: "Clean 2-string strike" },
+          { name: "Palm Mute Chug at the Bridge", desc: "Rest heel of palm directly where string meets bridge saddle.", target: "Tight low-end thump" }
+        ],
+        song: {
+          title: "The Black Keys - 'Gold on the Ceiling'",
+          notes: "Driving garage rock rhythm. Tight, punchy palm muting.",
+          query: "The Black Keys Gold on the Ceiling chords"
+        },
+        milestone: "Play the main rhythm verse riff of 'Gold on the Ceiling' at 130 BPM."
+      },
+      {
+        id: "m2_w7_d1",
+        stage: "Month 2: Power Chords & Electric Articulation",
+        week: 7,
+        day: 1,
+        title: "Single-Note Lead Riffs & Index Slides",
+        gear: "Electric + Marshall Amp",
+        drills: [
+          { name: "Index Slide Calibration", desc: "Slide index finger from fret 3 to fret 5 on low E without losing tone.", target: "20 clean slides" },
+          { name: "Alternate Picking on Single Strings", desc: "Strict down-up picking at 100 BPM on the E and A strings.", target: "Metronome locked" }
+        ],
+        song: {
+          title: "The Black Keys - 'Lonely Boy' (Main Riff)",
+          notes: "Single-note riff connecting into power chords. Keep picking precise.",
+          query: "The Black Keys Lonely Boy tab"
+        },
+        milestone: "Play opening lead riff of 'Lonely Boy' at tempo with clean alternate picking."
+      },
+      {
+        id: "m2_w8_d1",
+        stage: "Month 2: Power Chords & Electric Articulation",
+        week: 8,
+        day: 1,
+        title: "The Melodic 3rd-Fret Anchor Cluster",
+        gear: "Acoustic or Electric",
+        drills: [
+          { name: "Anchor Fingers 3 & 4 Drill", desc: "Lock ring and pinky on fret 3 of strings 1 and 2 while moving Cadd9, G, Em7, Dsus4.", target: "40 switches / min" },
+          { name: "16th-Note Fast Strumming", desc: "Maintain relaxed wrist flicking through 16th-note folk-punk rhythms.", target: "115 BPM" }
+        ],
+        song: {
+          title: "Bayside - 'Megan'",
+          notes: "Fast acoustic punk progression. Ringing open drones over shifting roots.",
+          query: "Bayside Megan chords"
+        },
+        milestone: "Cycle Cadd9, G, Em7, Dsus4 without lifting fingers 3 and 4 from the fretboard."
+      },
+
+      // MONTH 3: Extended Harmony, Fingerpicking & Midwest Emo Chords
+      {
+        id: "m3_w10_d1",
+        stage: "Month 3: Advanced Fingerpicking & Extended Harmony",
+        week: 10,
+        day: 1,
+        title: "Fast Travis-Style Country Syncopation",
+        gear: "Acoustic-Electric",
+        drills: [
+          { name: "Alternating Thumb with Syncopated Index", desc: "Thumb plays beats 1-2-3-4; index plucks off-beat on 'and' of 2.", target: "80 BPM" },
+          { name: "Hammer-Ons inside Fingerpicking", desc: "Hammer onto the 2nd fret of D string while thumb continues.", target: "Zero thumb stutter" }
+        ],
+        song: {
+          title: "Evan Honer - 'Jersey Giant'",
+          notes: "Fast, rhythmic Americana picking pattern.",
+          query: "Evan Honer Jersey Giant chords"
+        },
+        milestone: "Execute intro fingerpicking pattern of 'Jersey Giant' cleanly at 80 BPM."
+      },
+      {
+        id: "m3_w11_d1",
+        stage: "Month 3: Advanced Fingerpicking & Extended Harmony",
+        week: 11,
+        day: 1,
+        title: "The Math Rock Gateway: Major 7ths & Add9s",
+        gear: "Electric + Clean Amp",
+        drills: [
+          { name: "Voicing Cmaj7 & Fmaj7", desc: "Fingerpick individual notes of Cmaj7 (x-3-2-0-0-0) and Fmaj7 (x-x-3-2-1-0).", target: "Zero muffled notes" },
+          { name: "PIMA Arpeggio String Roll", desc: "Pluck Thumb -> Index -> Middle -> Ring in a continuous cascading loop.", target: "85 BPM" }
+        ],
+        song: {
+          title: "American Football - 'Never Meant' (Standard Tuning Intro)",
+          notes: "Chime-like open arpeggios. Let every string ring together like a piano chord.",
+          query: "American Football Never Meant chords"
+        },
+        milestone: "Perform 8-measure arpeggiated loop across Cmaj7, Am9, and Fmaj7 with zero muted notes."
+      },
+
+      // MONTH 10-12: The Target Style (Math Rock & Progressive Clean Tapping)
+      {
+        id: "m12_w48_d1",
+        stage: "Stage 4: Progressive Math Rock & Tapping",
+        week: 48,
+        day: 1,
+        title: "Right-Hand Tapping Mechanics & Flick-Offs",
+        gear: "Electric (Low Action, Clean Boost)",
+        drills: [
+          { name: "Right-Hand Middle Finger Tap", desc: "Tap directly behind fret 12 with right hand; flick downward toward floor.", target: "Consistent volume" },
+          { name: "Cyclic 3-Note Tapping Loop", desc: "Tap 12 -> Pull-off to Fret 5 -> Pull-off to Open high E string.", target: "60 BPM metronome" }
+        ],
+        song: {
+          title: "Hōmage - 'Loveliest Tints of Azure' (Theme Deconstruction)",
+          notes: "Progressive math rock tapping riff. Light touch, clean transient articulation.",
+          query: "Homage Loveliest Tints of Azure tab"
+        },
+        milestone: "Perform continuous 16th-note tapping loops across 3 strings without fret hum."
+      }
+    ];
+
+    // -------------------------------------------------------------
+    // 2. Application State Management
+    // -------------------------------------------------------------
+    const STORAGE_KEY = "FRETFLOW_USER_STATE_V1";
+    let appState = {
+      currentLessonIndex: 0,
+      completedLessons: {},
+      switchRecords: {},
+      bpmRecords: {}
+    };
+
+    function loadState() {
+      const stored = localStorage.getItem(STORAGE_KEY);
+      if (stored) {
+        try {
+          appState = JSON.parse(stored);
+        } catch (e) {
+          console.error("Failed to parse storage, using default", e);
+        }
+      }
+    }
+
+    function saveState() {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(appState));
+    }
+
+    // -------------------------------------------------------------
+    // 3. Web Audio Metronome Engine
+    // -------------------------------------------------------------
+    let audioCtx = null;
+    let isMetronomeRunning = false;
+    let metronomeBpm = 75;
+    let nextNoteTime = 0.0;
+    let metronomeTimerID = null;
+    let beatVisualState = false;
+
+    function initAudioContext() {
+      if (!audioCtx) {
+        const AudioContext = window.AudioContext || window.webkitAudioContext;
+        audioCtx = new AudioContext();
+      }
+    }
+
+    function scheduleClick(time) {
+      const osc = audioCtx.createOscillator();
+      const gain = audioCtx.createGain();
+
+      osc.type = "sine";
+      osc.frequency.setValueAtTime(1000, time);
+      gain.gain.setValueAtTime(1, time);
+      gain.gain.exponentialRampToValueAtTime(0.001, time + 0.04);
+
+      osc.connect(gain);
+      gain.connect(audioCtx.destination);
+      osc.start(time);
+      osc.stop(time + 0.04);
+
+      // Trigger UI flash in sync with audio
+      setTimeout(() => {
+        const beatEl = document.getElementById("beatIndicator");
+        beatEl.classList.remove("bg-slate-700");
+        beatEl.classList.add("bg-brand-500", "scale-125");
+        setTimeout(() => {
+          beatEl.classList.remove("bg-brand-500", "scale-125");
+          beatEl.classList.add("bg-slate-700");
+        }, 60);
+      }, (time - audioCtx.currentTime) * 1000);
+    }
+
+    function metronomeScheduler() {
+      while (nextNoteTime < audioCtx.currentTime + 0.1) {
+        scheduleClick(nextNoteTime);
+        const secondsPerBeat = 60.0 / metronomeBpm;
+        nextNoteTime += secondsPerBeat;
+      }
+      metronomeTimerID = setTimeout(metronomeScheduler, 25);
+    }
+
+    function toggleMetronome() {
+      initAudioContext();
+      const toggleBtn = document.getElementById("metronomeToggle");
+
+      if (isMetronomeRunning) {
+        clearTimeout(metronomeTimerID);
+        isMetronomeRunning = false;
+        toggleBtn.textContent = "Start Metronome";
+        toggleBtn.classList.remove("bg-rose-600", "hover:bg-rose-500", "text-white");
+        toggleBtn.classList.add("bg-brand-600", "hover:bg-brand-500", "text-black");
+      } else {
+        if (audioCtx.state === "suspended") {
+          audioCtx.resume();
+        }
+        nextNoteTime = audioCtx.currentTime + 0.05;
+        metronomeScheduler();
+        isMetronomeRunning = true;
+        toggleBtn.textContent = "Stop Metronome";
+        toggleBtn.classList.remove("bg-brand-600", "hover:bg-brand-500", "text-black");
+        toggleBtn.classList.add("bg-rose-600", "hover:bg-rose-500", "text-white");
+      }
+    }
+
+    // Tap Tempo Tracker
+    let tapTimes = [];
+    function recordTapTempo() {
+      const now = performance.now();
+      tapTimes.push(now);
+      if (tapTimes.length > 4) tapTimes.shift();
+
+      if (tapTimes.length > 1) {
+        let intervals = [];
+        for (let i = 1; i < tapTimes.length; i++) {
+          intervals.push(tapTimes[i] - tapTimes[i - 1]);
+        }
+        const avgInterval = intervals.reduce((a, b) => a + b, 0) / intervals.length;
+        const calculatedBpm = Math.round(60000 / avgInterval);
+        if (calculatedBpm >= 40 && calculatedBpm <= 220) {
+          updateBPM(calculatedBpm);
+        }
+      }
+    }
+
+    function updateBPM(val) {
+      metronomeBpm = Math.max(40, Math.min(220, parseInt(val)));
+      document.getElementById("bpmDisplay").textContent = metronomeBpm;
+      document.getElementById("bpmSlider").value = metronomeBpm;
+    }
+
+    // -------------------------------------------------------------
+    // 4. 60-Second Switch Benchmark Counter
+    // -------------------------------------------------------------
+    let switchCount = 0;
+    let switchTimeRemaining = 60;
+    let switchTimerInterval = null;
+    let isSwitchRunning = false;
+
+    function startSwitchTest() {
+      clearInterval(switchTimerInterval);
+      switchCount = 0;
+      switchTimeRemaining = 60;
+      isSwitchRunning = true;
+
+      document.getElementById("switchCountDisplay").textContent = switchCount;
+      document.getElementById("switchTimer").textContent = "60s";
+      document.getElementById("tapSwitchBtn").disabled = false;
+      document.getElementById("startSwitchBtn").textContent = "Restarting...";
+
+      switchTimerInterval = setInterval(() => {
+        switchTimeRemaining--;
+        document.getElementById("switchTimer").textContent = switchTimeRemaining + "s";
+
+        if (switchTimeRemaining <= 0) {
+          clearInterval(switchTimerInterval);
+          isSwitchRunning = false;
+          document.getElementById("tapSwitchBtn").disabled = true;
+          document.getElementById("startSwitchBtn").textContent = "Start Test";
+
+          // Save benchmark result to current lesson
+          const currentLesson = CURRICULUM_DATA[appState.currentLessonIndex];
+          appState.switchRecords[currentLesson.id] = switchCount;
+          saveState();
+          alert(`Test Complete! You scored ${switchCount} clean chord shifts.`);
+        }
+      }, 1000);
+    }
+
+    function recordSwitchTap() {
+      if (!isSwitchRunning) return;
+      switchCount++;
+      document.getElementById("switchCountDisplay").textContent = switchCount;
+    }
+
+    // -------------------------------------------------------------
+    // 5. 45-Minute Practice Clock
+    // -------------------------------------------------------------
+    let sessionSeconds = 45 * 60;
+    let sessionTimerInterval = null;
+    let isSessionRunning = false;
+
+    function toggleSessionTimer() {
+      const btn = document.getElementById("sessionToggle");
+      if (isSessionRunning) {
+        clearInterval(sessionTimerInterval);
+        isSessionRunning = false;
+        btn.textContent = "Resume Clock";
+      } else {
+        isSessionRunning = true;
+        btn.textContent = "Pause Clock";
+        sessionTimerInterval = setInterval(() => {
+          sessionSeconds--;
+          renderSessionTime();
+          if (sessionSeconds <= 0) {
+            clearInterval(sessionTimerInterval);
+            isSessionRunning = false;
+            btn.textContent = "Session Complete";
+            alert("45-Minute Practice Session Complete. Great consistency.");
+          }
+        }, 1000);
+      }
+    }
+
+    function renderSessionTime() {
+      const mins = Math.floor(sessionSeconds / 60);
+      const secs = sessionSeconds % 60;
+      document.getElementById("sessionTimeDisplay").textContent = 
+        `${String(mins).padStart(2, '0')}:${String(secs).padStart(2, '0')}`;
+    }
+
+    function resetSessionTimer() {
+      clearInterval(sessionTimerInterval);
+      isSessionRunning = false;
+      sessionSeconds = 45 * 60;
+      renderSessionTime();
+      document.getElementById("sessionToggle").textContent = "Start Routine";
+    }
+
+    // -------------------------------------------------------------
+    // 6. UI Rendering & Curriculum Integration
+    // -------------------------------------------------------------
+    function renderLesson() {
+      const lesson = CURRICULUM_DATA[appState.currentLessonIndex];
+      const isPassed = !!appState.completedLessons[lesson.id];
+
+      // Badges & Header
+      document.getElementById("lessonMetaBadge").textContent = `Week ${lesson.week} // Day ${lesson.day}`;
+      document.getElementById("lessonGearText").textContent = lesson.gear;
+      document.getElementById("lessonTitle").textContent = lesson.title;
+      document.getElementById("lessonSubtext").textContent = `Repertoire Focus: ${lesson.song.title}`;
+
+      // Drills
+      const drillContainer = document.getElementById("drillList");
+      drillContainer.innerHTML = "";
+      lesson.drills.forEach(drill => {
+        const d = document.createElement("div");
+        d.className = "p-3.5 bg-slate-950/70 border border-slate-800/80 rounded-lg flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2";
+        d.innerHTML = `
+          <div>
+            <div class="text-xs font-bold text-slate-200">${drill.name}</div>
+            <div class="text-[11px] text-slate-400 mt-0.5">${drill.desc}</div>
+          </div>
+          <span class="text-xs font-mono font-semibold px-2 py-1 rounded bg-slate-800 text-brand-500 border border-slate-700 shrink-0">
+            ${drill.target}
+          </span>
+        `;
+        drillContainer.appendChild(d);
+      });
+
+      // Song Details & Ultimate Guitar Pro Link
+      document.getElementById("songTitle").textContent = lesson.song.title;
+      document.getElementById("songNotes").textContent = lesson.song.notes;
+      const encodedQuery = encodeURIComponent(lesson.song.query);
+      document.getElementById("ugLink").href = `https://www.ultimate-guitar.com/search.php?search_type=title&value=${encodedQuery}`;
+
+      // Milestone & Pass Button
+      document.getElementById("milestoneDescription").textContent = lesson.milestone;
+      const passBtn = document.getElementById("togglePassBtn");
+      if (isPassed) {
+        passBtn.className = "w-full sm:w-auto px-4 py-2.5 rounded-lg text-xs font-bold bg-brand-600/20 text-brand-500 border border-brand-500/40 hover:bg-brand-600/30 transition flex items-center justify-center gap-2";
+        passBtn.innerHTML = `<span>✓</span> Milestone Achieved`;
+      } else {
+        passBtn.className = "w-full sm:w-auto px-4 py-2.5 rounded-lg text-xs font-bold bg-slate-800 text-slate-300 border border-slate-700 hover:bg-slate-700 transition flex items-center justify-center gap-2";
+        passBtn.innerHTML = `Mark Milestone Complete`;
+      }
+
+      // Update Navigation Buttons
+      document.getElementById("prevLessonBtn").disabled = (appState.currentLessonIndex === 0);
+      document.getElementById("nextLessonBtn").disabled = (appState.currentLessonIndex === CURRICULUM_DATA.length - 1);
+
+      // Refresh Stage Dropdown
+      const stageSelect = document.getElementById("stageSelector");
+      stageSelect.value = lesson.stage;
+
+      renderIndexGrid();
+    }
+
+    function renderIndexGrid() {
+      const grid = document.getElementById("lessonIndexGrid");
+      grid.innerHTML = "";
+      CURRICULUM_DATA.forEach((l, idx) => {
+        const isCurrent = (idx === appState.currentLessonIndex);
+        const isDone = !!appState.completedLessons[l.id];
+
+        const btn = document.createElement("button");
+        btn.className = `p-2 rounded text-xs font-mono font-bold border transition text-center ${
+          isCurrent 
+            ? "border-brand-500 bg-brand-500/10 text-white" 
+            : isDone 
+              ? "border-slate-800 bg-emerald-950/40 text-emerald-400"
+              : "border-slate-800 bg-slate-950 text-slate-500 hover:text-slate-300 hover:border-slate-700"
+        }`;
+        btn.textContent = `W${l.week} D${l.day}`;
+        btn.onclick = () => {
+          appState.currentLessonIndex = idx;
+          saveState();
+          renderLesson();
+        };
+        grid.appendChild(btn);
+      });
+    }
+
+    function populateStageDropdown() {
+      const select = document.getElementById("stageSelector");
+      const stages = [...new Set(CURRICULUM_DATA.map(item => item.stage))];
+      select.innerHTML = "";
+      stages.forEach(stg => {
+        const opt = document.createElement("option");
+        opt.value = stg;
+        opt.textContent = stg;
+        select.appendChild(opt);
+      });
+
+      select.onchange = (e) => {
+        const targetStage = e.target.value;
+        const targetIdx = CURRICULUM_DATA.findIndex(l => l.stage === targetStage);
+        if (targetIdx !== -1) {
+          appState.currentLessonIndex = targetIdx;
+          saveState();
+          renderLesson();
+        }
+      };
+    }
+
+    // -------------------------------------------------------------
+    // 7. Event Listeners & Bootstrapping
+    // -------------------------------------------------------------
+    document.addEventListener("DOMContentLoaded", () => {
+      loadState();
+      populateStageDropdown();
+      renderLesson();
+
+      // Navigation
+      document.getElementById("prevLessonBtn").onclick = () => {
+        if (appState.currentLessonIndex > 0) {
+          appState.currentLessonIndex--;
+          saveState();
+          renderLesson();
+        }
+      };
+      document.getElementById("nextLessonBtn").onclick = () => {
+        if (appState.currentLessonIndex < CURRICULUM_DATA.length - 1) {
+          appState.currentLessonIndex++;
+          saveState();
+          renderLesson();
+        }
+      };
+
+      // Milestone Completion Toggle
+      document.getElementById("togglePassBtn").onclick = () => {
+        const lesson = CURRICULUM_DATA[appState.currentLessonIndex];
+        if (appState.completedLessons[lesson.id]) {
+          delete appState.completedLessons[lesson.id];
+        } else {
+          appState.completedLessons[lesson.id] = new Date().toISOString();
+        }
+        saveState();
+        renderLesson();
+      };
+
+      // Metronome Listeners
+      document.getElementById("metronomeToggle").onclick = toggleMetronome;
+      document.getElementById("tapTempoBtn").onclick = recordTapTempo;
+      document.getElementById("bpmSlider").oninput = (e) => updateBPM(e.target.value);
+      document.getElementById("bpmPlus").onclick = () => updateBPM(metronomeBpm + 1);
+      document.getElementById("bpmMinus").onclick = () => updateBPM(metronomeBpm - 1);
+
+      // Switch Tapper Listeners
+      document.getElementById("startSwitchBtn").onclick = startSwitchTest;
+      document.getElementById("tapSwitchBtn").onclick = recordSwitchTap;
+      window.addEventListener("keydown", (e) => {
+        if (e.code === "Space" && isSwitchRunning) {
+          e.preventDefault();
+          recordSwitchTap();
+        }
+      });
+
+      // Session Clock
+      document.getElementById("sessionToggle").onclick = toggleSessionTimer;
+      document.getElementById("sessionReset").onclick = resetSessionTimer;
+
+      // Data Export / Import
+      document.getElementById("exportBtn").onclick = () => {
+        const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(appState, null, 2));
+        const dlAnchor = document.createElement('a');
+        dlAnchor.setAttribute("href", dataStr);
+        dlAnchor.setAttribute("download", `FretFlow_Backup_${new Date().toISOString().split('T')[0]}.json`);
+        dlAnchor.click();
+      };
+
+      const importInput = document.getElementById("importInput");
+      document.getElementById("importBtn").onclick = () => importInput.click();
+      importInput.onchange = (e) => {
+        const file = e.target.files[0];
+        if (!file) return;
+        const reader = new FileReader();
+        reader.onload = (event) => {
+          try {
+            appState = JSON.parse(event.target.result);
+            saveState();
+            renderLesson();
+            alert("State imported successfully!");
+          } catch (err) {
+            alert("Error parsing JSON file.");
+          }
+        };
+        reader.readAsText(file);
+      };
+    });
+  </script>
+</body>
+</html>
